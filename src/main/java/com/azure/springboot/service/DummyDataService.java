@@ -4,10 +4,9 @@ import com.azure.springboot.document.UserDocument;
 import com.azure.springboot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DummyDataService {
@@ -15,23 +14,16 @@ public class DummyDataService {
     @Autowired
     UserRepository userRepository;
 
-    @PostConstruct
+    //@PostConstruct
     public void createUsers(){
-        ArrayList<UserDocument> list = new ArrayList<>();
-        UserDocument user1 = new UserDocument();
-        user1.setName("Michelli Brito");
-        list.add(user1);
 
-        UserDocument user2 = new UserDocument();
-        user2.setName("Claudio Maia");
-        list.add(user2);
-
-        UserDocument user3 = new UserDocument();
-        user3.setName("João Silva");
-        list.add(user3);
-
-        List<UserDocument> usersSaved = userRepository.saveAll(list);
-        usersSaved.forEach(System.out::println);
+        userRepository.deleteAll()
+                .thenMany(
+                        Flux.just("Michelli", "Maria", "Roberto",
+                                "Carlos", "Ana Clara")
+                                .map(nome -> new UserDocument(UUID.randomUUID().toString(), nome))
+                                .flatMap(userRepository::save))
+                .subscribe(System.out::println);
 
     }
 }
